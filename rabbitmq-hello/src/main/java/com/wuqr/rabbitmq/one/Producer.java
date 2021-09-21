@@ -34,6 +34,7 @@ public class Producer {
         // 创建连接
         Connection connection = factory.newConnection();
         // 获取信道
+
         Channel channel = connection.createChannel();
         /**
          * 声明一个队列
@@ -45,7 +46,7 @@ public class Producer {
          * Map<String, Object> argument 其他队列参数 其他参数
          *
          */
-        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+//        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
         // 发消息
         String message = "hello world"; // 初次使用
         /**
