@@ -18,6 +18,7 @@ public class Worker01 {
     // 消费消息
     public static void main(String[] args) throws Exception {
         Channel channel = RabbitMqUtils.getChannel();
+
         // @FunctionalInterface 下面是一个接口，并且是一个函数式接口，
         DeliverCallback deliverCallback =(consumerTag, message)->{
             System.out.println("接收到的消息：" + new String(message.getBody()));
