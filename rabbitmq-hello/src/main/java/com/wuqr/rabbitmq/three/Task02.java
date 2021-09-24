@@ -19,8 +19,9 @@ public class Task02 {
 
     public static void main(String[] args) throws Exception {
         Channel channel = RabbitMqUtils.getChannel();
+        boolean durable = true; // 是否需要持久化，durable 持久的持续的；
         // 声明队列 其实就是去创建队列，
-        channel.queueDeclare(TASK_QUEUE_NAME, false, false ,false, null);
+        channel.queueDeclare(TASK_QUEUE_NAME, durable, false ,false, null);
         // 从控制台输入消息
         Scanner scanner = new Scanner(System.in);
         while (scanner.hasNext()) {
