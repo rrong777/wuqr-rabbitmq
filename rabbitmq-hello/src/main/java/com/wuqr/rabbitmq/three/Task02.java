@@ -20,6 +20,8 @@ public class Task02 {
 
     public static void main(String[] args) throws Exception {
         Channel channel = RabbitMqUtils.getChannel();
+        // 开启发布确认，就是发消息的时候就表明我这个信道发送的消息你接收到需要给我确认消息。给信道开启了发布确认
+//        channel.confirmSelect();
         boolean durable = true; // 是否需要持久化，durable 持久的持续的；
         // 声明队列 其实就是去创建队列，
         channel.queueDeclare(TASK_QUEUE_NAME, durable, false ,false, null);
