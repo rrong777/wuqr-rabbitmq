@@ -6,6 +6,9 @@ import com.wuqr.rabbitmq.utils.RabbitMqUtils;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentNavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
  * @author wql78
@@ -93,11 +96,31 @@ public class ConfirmMessage {
         channel.queueDeclare(queueName, false, false, false, null);
         // 开启发布确认
         channel.confirmSelect();
+
+        /**
+         *  线程安全 有序的一个哈希表（Map） 适用于高并发的情况下
+         *  外部确认的容器
+         *  1. 轻松的将序号与消息进行关联（map）
+         *  2. 轻松的批量删除条目 只要给到序号（key）
+         *  3. 支持高并发（多线程，重点）
+         */
+        ConcurrentSkipListMap<Long, String> outstandingConfirms = new ConcurrentSkipListMap<>();
         // 开始时间
         long begin = System.currentTimeMillis();
         // 消息确认成功回调函数
         ConfirmCallback ackCallback = (deliveryTag, multiple) -> {
             System.out.println("确认的消息：" + deliveryTag);
+            // 2. 删除已经确认的消息，剩下的就是未确认的消息
+            if(multiple) {
+                // 在头部的map 如果是批量发送消息的，确认也是批量的，也就是说批量发送，一次发送十条，确认的是小于这个key的
+                // 都是确认发送的消息，headMap 小于deliveryTag的全部就是确认过的，清除掉。headMap是浅拷贝
+                // 批量发送消息的话，一批次只有一次确认，确认最后一条，所以最后一条之前的map全部删除
+                ConcurrentNavigableMap<Long, String> confirmed = outstandingConfirms.headMap(deliveryTag);
+                confirmed.clear();
+            } else {
+                // 如果不是批量，删除当前消息即可
+                outstandingConfirms.remove(deliveryTag);
+            }
         };
         /**
          * 第一个参数： 消息的标记
@@ -105,7 +128,9 @@ public class ConfirmMessage {
          */
         // 消息确认失败回调函数
         ConfirmCallback nackCallback = (deliveryTag, multiple) -> {
-            System.out.println("未确认的消息：" + deliveryTag);
+            // 3. 打印一下未确认的消息有哪些
+            String message = outstandingConfirms.get(deliveryTag);
+            System.out.println("未确认的消息是" + message + "未确认的消息的标记：" + deliveryTag);
 //            deliveryTag 就是消息的标识
         };
 
@@ -133,6 +158,8 @@ public class ConfirmMessage {
             // broker会通过信道返回回来，通知你这个发件人，哪些收到了哪些你需要重发，你等着就需要有一个监听器，发消息前就准备好
             // 因为broker不一定什么时候给你响应，你需要监听哪些消息成功 哪些消息失败  开始发送消息前监听器就要就位，因为你不
             // 知道什么时候会响应你 给你确认
+            // 1. 此处记录下所有要发送的消息 消息的总和, 每发送一条消息就记录一次。
+            outstandingConfirms.put(channel.getNextPublishSeqNo(), message);
 
         }
         
