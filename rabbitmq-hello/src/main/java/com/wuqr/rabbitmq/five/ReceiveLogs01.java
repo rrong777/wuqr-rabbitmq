@@ -30,7 +30,7 @@ public class ReceiveLogs01 {
          * 队列和交换机进行绑定
          * routingKey就是一个空串
          */
-        channel.queueBind(queueName, EXCHANG_NAME, "");
+        channel.queueBind(queueName, EXCHANG_NAME, "123");
         System.out.println("ReceiveLogs01等待接收消息，把接收到的消息打印再屏幕……");
 
         // 接收消息的回调
