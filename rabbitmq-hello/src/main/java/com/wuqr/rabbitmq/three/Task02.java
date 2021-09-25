@@ -1,6 +1,7 @@
 package com.wuqr.rabbitmq.three;
 
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.MessageProperties;
 import com.wuqr.rabbitmq.utils.RabbitMqUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -27,7 +28,9 @@ public class Task02 {
         while (scanner.hasNext()) {
             String message = scanner.next();
             // 如果你传入的message是英文 msg.getBytes()；即可，如果传入的有中文，msg.getBytes("UTF-8")一定要带字符集
-            channel.basicPublish("", TASK_QUEUE_NAME, null, message.getBytes(StandardCharsets.UTF_8));
+            // 设置生产者发送的消息为持久化消息（要求保存到磁盘上） 如果不要求要存在磁盘，那就是保存在内存中，服务器断电随时丢失消息
+            channel.basicPublish("", TASK_QUEUE_NAME, MessageProperties.PERSISTENT_TEXT_PLAIN,
+                    message.getBytes(StandardCharsets.UTF_8));
             System.out.println("生产者发出消息：" + message);
         }
     }
