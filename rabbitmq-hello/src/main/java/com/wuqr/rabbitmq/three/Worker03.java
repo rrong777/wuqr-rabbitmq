@@ -35,7 +35,11 @@ public class Worker03 {
         CancelCallback cancelCallback = (consumerTag)->{
             System.out.println(consumerTag + "消费者取消消费接口回调逻辑");
         };
+        // 设置不公平分发
+        int perfetchCount = 1;
+        channel.basicQos(perfetchCount);
         boolean autoAck = false;
+
         channel.basicConsume(TASK_QUEUE_NAME, autoAck,  deliverCallback, cancelCallback);
     }
 }
