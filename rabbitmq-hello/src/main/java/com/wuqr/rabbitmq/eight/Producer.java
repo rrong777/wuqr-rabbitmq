@@ -21,11 +21,14 @@ public class Producer {
         Channel channel = RabbitMqUtils.getChannel();
         // 死信消息 设置TTL时间 ttl： time to live 单位是毫秒，发送消息的时候就要给消息设置过期时间，队列只是暂存，生产者才能定义
         // 消息的存活时间
-        AMQP.BasicProperties properties = new AMQP.BasicProperties().builder().expiration("10000").build();
+//        AMQP.BasicProperties properties = new AMQP.BasicProperties().builder().expiration("10000").build();
+        // 本次测试队列达到最大长度之后造成的死信，不再设置消息过期时间
+        // 删除队列后打开消费者01重新创建队列和交换机，然后关闭消费者01，关闭消费者01并不代表把队列删除了，此时生产者生产10条消息
+        // 6条会放到普通队列，此时普通队列已经满了，剩下四条会被放到死信队列
         for (int i = 1; i < 11; i++) {
 
             String message = "info" + i;
-            channel.basicPublish(NORMAL_EXCHANGE, "zhangsan", properties, message.getBytes());
+            channel.basicPublish(NORMAL_EXCHANGE, "zhangsan", null, message.getBytes());
             SleepUtils.sleep(1);
         }
         // 先启动C1 ，创建普通、死信交换机，普通、死信队列，然后把C1（消费者01） 关闭伪装宕机， 然后启动生产者，往普通交换机

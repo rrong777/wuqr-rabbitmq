@@ -45,6 +45,7 @@ public class Consumer01 {
 
         // 设置死信routingKey， 死信交换机和死信队列相当于外挂在普通队列上的一个额外存储，这个存储应该可以多个队列共同使用
         arguments.put("x-dead-letter-routing-key", "lisi");// 死信往上面的交换机中的lisi队列发送
+        arguments.put("x-max-length", 6);// 队列最大长度
         channel.queueDeclare(NORMAL_QUEUE, false, false, false, arguments);
 
 
