@@ -24,6 +24,7 @@ public class TtlQueueConfig {
     // 普通队列名称
     public static final String QUEUE_A = "QA";
     public static final String QUEUE_B = "QB";
+    public static final String QUEUE_C = "QC";
 
     // 死信队列名称
     public static final String DEAD_LETTER_QUEUE = "QD";
@@ -62,12 +63,30 @@ public class TtlQueueConfig {
         return QueueBuilder.durable(QUEUE_B)
                 .withArguments(arguments).build();
     }
+    // 提供延时队列QC 但是QC不再设置消息ttl，消息ttl 由生产者决定
+    @Bean("queueC")
+    public Queue queueC() {
+        Map<String, Object> arguments = new HashMap<>(2);
+        arguments.put("x-dead-letter-exchange", Y_DEAD_LETTER_EXCHANGE);
+        arguments.put("x-dead-letter-routing-key", "YD");
+//        arguments.put("x-message-ttl", 40000); QC不再提供消息ttl，这样QC可以接收任何存活时间的消息
+        return QueueBuilder.durable(QUEUE_C)
+                .withArguments(arguments).build();
+    }
+
+    // 普通队列C和X交换机进行绑定
+    @Bean
+    public Binding ququeCBindingX(@Qualifier("queueC") Queue queueC, @Qualifier("xExchange") DirectExchange xExchange) {
+        return BindingBuilder.bind(queueC).to(xExchange).with("XC");
+    }
 
     // 死信队列
     @Bean("queueD")
     public Queue queueD() {
         return QueueBuilder.durable(DEAD_LETTER_QUEUE).build();
     }
+
+
 
     // 执行Binding工作的bean 不需要声明别名，因为不需要调用 其实上面的都不需要别名的，方法名就是别名
     // 普通队列A绑定普通交换机X

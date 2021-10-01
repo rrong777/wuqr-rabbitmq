@@ -1,6 +1,8 @@
 package com.wuqr.rabbitmq.controller;
 
+import com.rabbitmq.client.MessageProperties;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,7 +36,26 @@ public class SendMsgController {
         rabbitTemplate.convertAndSend("X", "XB", "消息来自TTL为40S的队列：" + message);
     }
 
-    // 生产者写完该写消费者  消费者通过监听方式， 
+    // 生产者写完该写消费者  消费者通过监听方式，
     //    http://localhost:8080/ttl/sendMsg/嘻嘻嘻，测试地址 往这里发送一次请求，会生产一条消息，发往两个延迟队列
 
+    // 新的生产者，发送消息的时候带时间,生产的消息自带ttl
+    @GetMapping("/sendExpirationMsg/{message}/{ttlTime}")
+    public void sendMessage(@PathVariable String message, @PathVariable String ttlTime) {// 方法名可以相同，重载就行
+        // {}占位符
+        log.info("当前时间：{}，发送一条ttl为{}毫秒的消息给QC ttl队列：{}",
+                new Date().toString(), ttlTime, message);
+
+        // messagePostProcessor 设置消息的属性，发送消息方法的第四个参数
+        MessagePostProcessor messagePostProcessor = (msg)->{
+            // 设置发送消息的延迟市场
+            msg.getMessageProperties().setExpiration(ttlTime);
+            return msg;
+        };
+
+        rabbitTemplate.convertAndSend("X",
+                "XC",
+                "消息来自QC队列：" + message,
+                messagePostProcessor);
+    }
 }
