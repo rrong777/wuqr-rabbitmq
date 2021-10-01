@@ -45,7 +45,7 @@ public class Consumer01 {
 
         // 设置死信routingKey， 死信交换机和死信队列相当于外挂在普通队列上的一个额外存储，这个存储应该可以多个队列共同使用
         arguments.put("x-dead-letter-routing-key", "lisi");// 死信往上面的交换机中的lisi队列发送
-        arguments.put("x-max-length", 6);// 队列最大长度
+//        arguments.put("x-max-length", 6);// 队列最大长度
         channel.queueDeclare(NORMAL_QUEUE, false, false, false, arguments);
 
 
@@ -66,9 +66,17 @@ public class Consumer01 {
         // 消息因为某些原因 变成死信之后，是由普通队列转发给死信队列的。 需要设置一定参数 普通队列才能把自己的消息转发给死信交换机
         // 再由死信交换机转发给死信队列
         DeliverCallback deliverCallback = (consumerTag, message ) -> {
-            System.out.println("Consumer01接收的消息是：" + new String(message.getBody(), StandardCharsets.UTF_8));
+            String msg = new String(message.getBody(), StandardCharsets.UTF_8);
+            if(msg.equals("info5")) {
+                System.out.println("Consumer01 拒绝的消息：：" + msg);
+                channel.basicReject(message.getEnvelope().getDeliveryTag(), false);
+            } else {
+                System.out.println("Consumer01接收的消息是：" + msg);
+                channel.basicAck(message.getEnvelope().getDeliveryTag(), false);
+            }
         };
-        channel.basicConsume(NORMAL_QUEUE, true, deliverCallback, consumerTag -> {});
+        // 要拒绝消息，相当于手动应答，就要关闭自动应答
+        channel.basicConsume(NORMAL_QUEUE, false, deliverCallback, consumerTag -> {});
     }
 
 }

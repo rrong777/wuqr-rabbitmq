@@ -31,6 +31,7 @@ public class Producer {
         for (int i = 1; i < 11; i++) {
 
             String message = "info" + i;
+            System.out.println("生产者生产消息：" + message);
             channel.basicPublish(NORMAL_EXCHANGE, "zhangsan", null, message.getBytes());
 //            SleepUtils.sleep(1);
         }
