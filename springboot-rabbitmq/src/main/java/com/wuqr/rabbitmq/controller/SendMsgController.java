@@ -34,7 +34,7 @@ public class SendMsgController {
         rabbitTemplate.convertAndSend("X", "XB", "消息来自TTL为40S的队列：" + message);
     }
 
-    // 生产者写完该写消费者  消费者通过监听方式，
+    // 生产者写完该写消费者  消费者通过监听方式， 
     //    http://localhost:8080/ttl/sendMsg/嘻嘻嘻，测试地址 往这里发送一次请求，会生产一条消息，发往两个延迟队列
 
 }
