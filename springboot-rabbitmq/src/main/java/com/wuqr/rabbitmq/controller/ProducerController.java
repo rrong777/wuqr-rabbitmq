@@ -25,14 +25,22 @@ public class ProducerController {
     @GetMapping("/sendMesssage/{message}")
     public void sendMessage(@PathVariable String message){
         // 这个对象有两个参数，id 还有消息背身
+        // 这个对象是回调信息，发送消息的时候要带上，回调才能收到
         CorrelationData correlationData = new CorrelationData("1");
 
         // 提供一个错误的交换机名字，测试消息发不出去的时候 调用回调
         // channel error; protocol method: #method<channel.close>(reply-code=404, reply-text=NOT_FOUND - no exchange 'confirm_exchange123' in vhost '/', class-id=60, method-id=40)
         // 修改后 发送失败 调用回调  错误原因，没有找到交换机confirm_exchange123 可以在回调中存储消息 以后重发
-        rabbitTemplate.convertAndSend(ConfirmConfig.CONFIRM_EXCHANGE_NAME + "123",
+        rabbitTemplate.convertAndSend(ConfirmConfig.CONFIRM_EXCHANGE_NAME,
                 ConfirmConfig.CONFIRM_ROUTING_KEY,
-                message);
+                message,correlationData);
+        log.info("发送消息内容： {}", message);
+
+        CorrelationData correlationData2 = new CorrelationData("2");
+
+        rabbitTemplate.convertAndSend(ConfirmConfig.CONFIRM_EXCHANGE_NAME,
+                ConfirmConfig.CONFIRM_ROUTING_KEY + "2", // 错误的队列名称，交换机正常，队列无法正常收到消息
+                message,correlationData2);
         log.info("发送消息内容： {}", message);
     }
 }
