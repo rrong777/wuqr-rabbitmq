@@ -1,11 +1,14 @@
 package com.wuqr.rabbitmq.one;
 
+import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -46,17 +49,23 @@ public class Producer {
          * Map<String, Object> argument 其他队列参数 其他参数
          *
          */
-//        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-        // 发消息
-        String message = "hello world"; // 初次使用
-        /**
-         * 基础发布，生产一个消息到队列里面
-         * 第一个参数交换机，生产到哪个交换机，先传空串
-         * 第二个参数路由的key值，本次、传队列名称，
-         * 第三个参数本次也没有 传null，
-         * 第四个参数是消息体的二进制信息
-         */
-        channel.basicPublish("", QUEUE_NAME, null, message.getBytes(StandardCharsets.UTF_8));
-        System.out.println("消息发送完毕！");
+        Map<String, Object> arguments = new HashMap<>();
+        // 默认方法是允许 0-255，这里参数设置了最大的就是10 允许优先级0-10，这个参数也可以在rabbitmq管理页面新增队列的时候设置
+        // 设置了这个参数，并且发消息的时候设置了消息的优先级就会按照优先级高的消息先出队，这里没设置的话，消息设置了优先级也没用
+        arguments.put("x-max-priority", 10);
+        channel.queueDeclare(QUEUE_NAME, false, false, false, arguments);
+        for(int i = 1; i < 11; i++) {
+            String message = "msg" + i;
+            if(i == 5) {
+                AMQP.BasicProperties properties = new AMQP.BasicProperties().builder().priority(5).build();
+
+                channel.basicPublish("", QUEUE_NAME, properties, message.getBytes(StandardCharsets.UTF_8));
+            } else {
+                // 其他的直接发送 不设置优先级
+                channel.basicPublish("", QUEUE_NAME, null, message.getBytes(StandardCharsets.UTF_8));
+
+            }
+        }
+        System.out.println("发送消息完成");
     }
 }
