@@ -18,7 +18,7 @@ public class Consumer {
     public static void main(String[] args) throws IOException, TimeoutException {
         // 创建连接工厂
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("192.168.0.110");
+        factory.setHost("192.168.0.111");
         factory.setUsername("admin");
         factory.setPassword("123");
         Connection connection = factory.newConnection();
