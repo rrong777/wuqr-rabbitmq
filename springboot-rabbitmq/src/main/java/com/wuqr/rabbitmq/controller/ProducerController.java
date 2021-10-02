@@ -28,6 +28,8 @@ public class ProducerController {
         CorrelationData correlationData = new CorrelationData("1");
 
         // 提供一个错误的交换机名字，测试消息发不出去的时候 调用回调
+        // channel error; protocol method: #method<channel.close>(reply-code=404, reply-text=NOT_FOUND - no exchange 'confirm_exchange123' in vhost '/', class-id=60, method-id=40)
+        // 修改后 发送失败 调用回调  错误原因，没有找到交换机confirm_exchange123 可以在回调中存储消息 以后重发
         rabbitTemplate.convertAndSend(ConfirmConfig.CONFIRM_EXCHANGE_NAME + "123",
                 ConfirmConfig.CONFIRM_ROUTING_KEY,
                 message);
