@@ -1,12 +1,14 @@
 package com.wuqr.rabbitmq.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author wql78
@@ -26,7 +28,7 @@ import javax.annotation.PostConstruct;
 @Slf4j
 // ConfirmCallback是一个内部接口，实现了内部接口， RabbitTemplate在调用callBack的时候 调用不到我们提供的这个实现类
 // 我们需要注入到RabbitTemplate 这个类里面的这个ConfirmCallback 接口的引用上，才会用我们这个实现，不然就用默认的实现了
-public class MyCallBack implements RabbitTemplate.ConfirmCallback {
+public class MyCallBack implements RabbitTemplate.ConfirmCallback, RabbitTemplate.ReturnCallback {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
@@ -35,7 +37,23 @@ public class MyCallBack implements RabbitTemplate.ConfirmCallback {
     @PostConstruct // 容器初始化后执行这个，替换默认的callBack实现 PostConstruct注解是在其他注解都完成之后才执行
     public void init() {
         rabbitTemplate.setConfirmCallback(this);
+        rabbitTemplate.setReturnCallback(this); // 当前类实现了两个函数式接口，所以当前类对象this 在两个函数式接口使用的地方都能使用
     }
+
+
+    /**
+     * 交换机退回消息的方法（发不到队列（无法路由）怎么办）
+     * 可以在当消息传递过程中不可达目的地时将消息返回给生产者。
+     * 只有无法路由到队列的消息 交换机才会调用这个方法，成功路由的消息就从交换机丢弃了
+     * message 消息 replyCode 响应码  replyText 失败的原因 exchange 交换机 routingKey
+     */
+    @Override
+    public void returnedMessage(Message message, int replyCode, String replyText, String exchange, String routingKey) {
+        log.error("消息{}，被交换机{}退回，退回原因{}，路由Key{}",
+                new String(message.getBody(), StandardCharsets.UTF_8),
+                exchange, replyText, routingKey );
+    }
+
     /**
      * 交换机确认回调方法
      * 1. 发消息，交换机接收到了回调
