@@ -27,7 +27,9 @@ public class ProducerController {
         // 这个对象有两个参数，id 还有消息背身
         CorrelationData correlationData = new CorrelationData("1");
 
-        rabbitTemplate.convertAndSend(ConfirmConfig.CONFIRM_EXCHANGE_NAME, ConfirmConfig.CONFIRM_ROUTING_KEY,
+        // 提供一个错误的交换机名字，测试消息发不出去的时候 调用回调
+        rabbitTemplate.convertAndSend(ConfirmConfig.CONFIRM_EXCHANGE_NAME + "123",
+                ConfirmConfig.CONFIRM_ROUTING_KEY,
                 message);
         log.info("发送消息内容： {}", message);
     }
