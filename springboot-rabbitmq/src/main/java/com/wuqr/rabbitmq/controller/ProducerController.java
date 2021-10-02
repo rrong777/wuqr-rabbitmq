@@ -2,6 +2,7 @@ package com.wuqr.rabbitmq.controller;
 
 import com.wuqr.rabbitmq.config.ConfirmConfig;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,9 @@ public class ProducerController {
     private RabbitTemplate rabbitTemplate; // 注入一个rabbitTemplate;
     @GetMapping("/sendMesssage/{message}")
     public void sendMessage(@PathVariable String message){
+        // 这个对象有两个参数，id 还有消息背身
+        CorrelationData correlationData = new CorrelationData("1");
+
         rabbitTemplate.convertAndSend(ConfirmConfig.CONFIRM_EXCHANGE_NAME, ConfirmConfig.CONFIRM_ROUTING_KEY,
                 message);
         log.info("发送消息内容： {}", message);
